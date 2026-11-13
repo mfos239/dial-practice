@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A practice keypad for learning the motor plan of dialing a phone number, with key tones, spoken digits, and a guiding hand that fades across support levels.">
+<title>Dial Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: readout, coaching and tools on the left, a fixed keypad on the right (stacked on phones).
+   Keys never move or resize between levels, so the motor plan for each number stays the same. */
+:root {
+  --font: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg: #eaeff6;
+  --surface: #ffffff;
+  --ink: #14202f;
+  --ink-soft: #4f5d74;
+  --line: #c9d2e0;
+  --key: #ffffff;
+  --key-edge: #b3bfd3;
+  --accent: #2b59c9;
+  --accent-ink: #ffffff;
+  --accent-soft: #dfe8fb;
+  --target: #f5b800;
+  --target-soft: #fff1c2;
+  --target-ink: #3b2a00;
+  --target-a: rgba(245, 184, 0, 0.55);
+  --good: #167a42;
+  --good-ink: #ffffff;
+  --good-edge: #0f5a30;
+  --end: #b3261e;
+  --end-ink: #ffffff;
+  --note-bg: #fff3d6;
+  --note-ink: #6b4300;
+  --hand: #2b59c9;
+  --hand-line: #ffffff;
+  --shadow: 0 1px 2px rgba(20, 32, 47, 0.12), 0 6px 18px rgba(20, 32, 47, 0.1);
+  --scrim: rgba(10, 18, 30, 0.5);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1420; --surface: #172033; --ink: #edf1f8; --ink-soft: #a3b1c9; --line: #2a3a55;
+    --key: #22304a; --key-edge: #080c14; --accent: #86a8ff; --accent-ink: #0e1420; --accent-soft: #22335e;
+    --target: #ffd24a; --target-soft: #4a3d12; --target-ink: #ffe9a8; --target-a: rgba(255, 210, 74, 0.5);
+    --good: #3fcf80; --good-ink: #052112; --good-edge: #1f8f55; --end: #ff8a80; --end-ink: #2a0705;
+    --note-bg: #3a2e10; --note-ink: #ffdca0; --hand: #86a8ff; --hand-line: #0e1420;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.35); --scrim: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1420; --surface: #172033; --ink: #edf1f8; --ink-soft: #a3b1c9; --line: #2a3a55;
+  --key: #22304a; --key-edge: #080c14; --accent: #86a8ff; --accent-ink: #0e1420; --accent-soft: #22335e;
+  --target: #ffd24a; --target-soft: #4a3d12; --target-ink: #ffe9a8; --target-a: rgba(255, 210, 74, 0.5);
+  --good: #3fcf80; --good-ink: #052112; --good-edge: #1f8f55; --end: #ff8a80; --end-ink: #2a0705;
+  --note-bg: #3a2e10; --note-ink: #ffdca0; --hand: #86a8ff; --hand-line: #0e1420;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.35); --scrim: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+/* High contrast option chosen in settings: white on black with a yellow cue. */
+:root[data-contrast="high"] {
+  --bg: #000000; --surface: #000000; --ink: #ffffff; --ink-soft: #e6e6e6; --line: #ffffff;
+  --key: #000000; --key-edge: #ffffff; --accent: #5cc8ff; --accent-ink: #000000; --accent-soft: #00263a;
+  --target: #ffff00; --target-soft: #2e2e00; --target-ink: #ffff00; --target-a: rgba(255, 255, 0, 0.6);
+  --good: #00e676; --good-ink: #000000; --good-edge: #ffffff; --end: #ff6b6b; --end-ink: #000000;
+  --note-bg: #000000; --note-ink: #ffff00; --hand: #ffff00; --hand-line: #000000;
+  --shadow: none; --scrim: rgba(0, 0, 0, 0.8);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 18px;
+  line-height: 1.35;
+  padding-block: 12px 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-text-size-adjust: 100%;
+}
+button { font-family: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3, p { margin: 0; }
+
+.app { max-width: 1000px; margin: 0 auto; display: grid; gap: 16px; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { display: grid; gap: 6px; min-width: 0; }
+.brand h1 { font-size: 26px; letter-spacing: -0.01em; line-height: 1.1; }
+.tag {
+  display: inline-block; width: fit-content; max-width: 100%;
+  background: var(--note-bg); color: var(--note-ink);
+  font-size: 15px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--note-ink) 25%, transparent);
+}
+:root[data-contrast="high"] .tag { border-color: var(--note-ink); }
+
+.pill {
+  position: relative; overflow: hidden;
+  min-height: 48px; padding: 0 18px;
+  border: 2px solid var(--line); border-radius: 999px;
+  background: var(--surface); font-size: 17px; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.pill:hover { border-color: var(--accent); }
+.pill.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.pill.danger { background: var(--end); border-color: var(--end); color: var(--end-ink); }
+.pill small { font-weight: 400; color: var(--ink-soft); font-size: 13px; }
+.pill svg { width: 22px; height: 22px; flex: none; }
+.fill {
+  position: absolute; inset: 0; background: var(--accent); opacity: 0.28;
+  transform: scaleY(0); transform-origin: bottom; pointer-events: none;
+}
+.holding > .fill { animation: fill var(--hold, 900ms) linear forwards; }
+@keyframes fill { to { transform: scaleY(1); } }
+
+.stage { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.left { display: grid; gap: 12px; width: 100%; min-width: 0; align-content: start; }
+.goal { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.goal .label { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+.goal .name { font-size: 20px; font-weight: 700; }
+.chip {
+  margin-left: auto; font-size: 15px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--ink);
+}
+
+.readout {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.12em 0.18em;
+  min-height: 1.7em; padding: 0.18em 0.35em 0.25em;
+  font-size: clamp(36px, 9vw, 62px); font-weight: 700; line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 20px;
+}
+.slot { min-width: 0.72em; text-align: center; border-bottom: 0.07em solid var(--line); }
+.slot.ghost { color: var(--ink-soft); opacity: 0.42; border-bottom-style: dashed; }
+.slot.empty { color: transparent; }
+.slot.done { color: var(--ink); border-bottom-color: var(--good); }
+.slot.now { border-bottom-color: var(--accent); animation: caret 1.1s steps(2, start) infinite; }
+.slot.fresh { animation: pop 0.35s ease-out; }
+.sep { width: 0.4em; }
+.placeholder { font-size: 0.42em; font-weight: 400; color: var(--ink-soft); padding-block: 0.4em; }
+@keyframes caret { 50% { border-bottom-color: transparent; } }
+@keyframes pop { 0% { transform: scale(0.5); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+.coach {
+  display: flex; align-items: center; gap: 12px; min-height: 76px;
+  background: var(--accent-soft); border-radius: 18px; padding: 12px 14px;
+  font-size: clamp(19px, 4.6vw, 24px); font-weight: 700; line-height: 1.25;
+}
+.coach p { flex: 1; min-width: 0; }
+.say {
+  flex: none; width: 52px; height: 52px; border-radius: 50%;
+  border: 0; background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  display: grid; place-items: center; touch-action: manipulation;
+}
+.say svg { width: 28px; height: 28px; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Keypad: sizes come from one variable so every part scales together. */
+.pad {
+  --k: clamp(60px, min(22vw, calc((100svh - 330px) / 5.9)), 112px);
+  --gap: calc(var(--k) * 0.17);
+  position: relative; display: grid; grid-template-columns: repeat(3, var(--k)); gap: var(--gap);
+  padding: calc(var(--k) * 0.1); touch-action: none; justify-content: center;
+  -webkit-touch-callout: none; user-select: none; -webkit-user-select: none;
+}
+.key {
+  position: relative; overflow: hidden;
+  width: var(--k); height: var(--k); border: 0; border-radius: 50%;
+  background: var(--key); color: var(--ink);
+  font-size: calc(var(--k) * 0.44); font-weight: 700; line-height: 1;
+  box-shadow: 0 calc(var(--k) * 0.05) 0 var(--key-edge), var(--shadow);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s, box-shadow 0.08s, opacity 0.25s;
+  display: grid; place-items: center;
+}
+:root[data-contrast="high"] .key { box-shadow: 0 0 0 3px #fff; }
+.key span { position: relative; pointer-events: none; }
+.key.is-pressed, .key.ghost {
+  transform: translateY(calc(var(--k) * 0.04));
+  box-shadow: 0 calc(var(--k) * 0.01) 0 var(--key-edge), var(--shadow);
+}
+.key.is-dim { opacity: 0.28; }
+.key.is-target {
+  background: var(--target-soft); color: var(--target-ink);
+  box-shadow: 0 0 0 calc(var(--k) * 0.07) var(--target), 0 calc(var(--k) * 0.05) 0 var(--key-edge);
+  animation: pulse 1.4s ease-out infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 calc(var(--k) * 0.07) var(--target), 0 0 0 0 var(--target-a), 0 calc(var(--k) * 0.05) 0 var(--key-edge); }
+  75%, 100% { box-shadow: 0 0 0 calc(var(--k) * 0.07) var(--target), 0 0 0 calc(var(--k) * 0.22) transparent, 0 calc(var(--k) * 0.05) 0 var(--key-edge); }
+}
+.key.ok { animation: ok 0.5s ease-out; }
+@keyframes ok { 0% { background: var(--good); color: var(--good-ink); } 100% { } }
+.key.miss, .key.nudge { animation: shake 0.35s; }
+@keyframes shake { 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+.key.call {
+  grid-column: 1 / -1; width: 100%; height: calc(var(--k) * 0.8);
+  border-radius: calc(var(--k) * 0.4); background: var(--good); color: var(--good-ink);
+  box-shadow: 0 calc(var(--k) * 0.05) 0 var(--good-edge), var(--shadow);
+  font-size: calc(var(--k) * 0.3); grid-auto-flow: column; justify-content: center; gap: calc(var(--k) * 0.12);
+}
+.key.call svg { width: calc(var(--k) * 0.34); height: calc(var(--k) * 0.34); position: relative; pointer-events: none; }
+.key.call.is-target {
+  background: var(--good); color: var(--good-ink);
+  box-shadow: 0 0 0 calc(var(--k) * 0.07) var(--target), 0 calc(var(--k) * 0.05) 0 var(--good-edge);
+}
+.key.call .fill { background: #fff; opacity: 0.35; }
+.key.is-pressed.call, .key.call.ghost { box-shadow: 0 calc(var(--k) * 0.01) 0 var(--good-edge); }
+.key .fill { opacity: 0.3; }
+
+.overlay { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 3; }
+.trail { position: absolute; inset: 0; width: 100%; height: 100%; }
+.trail-path {
+  fill: none; stroke: var(--accent); stroke-width: 7; stroke-linecap: round; stroke-dasharray: 0.1 20;
+  opacity: 0; transition: opacity 0.2s;
+}
+.trail-path.on { opacity: 0.9; animation: march 0.9s linear infinite; }
+.arrow { fill: var(--accent); }
+@keyframes march { to { stroke-dashoffset: -20; } }
+.hand {
+  position: absolute; left: 0; top: 0; width: calc(var(--k) * 0.82); aspect-ratio: 64 / 84;
+  opacity: 0; transition: transform 0.8s cubic-bezier(0.3, 0.7, 0.2, 1), opacity 0.25s;
+  filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.3)); will-change: transform;
+}
+.hand.on { opacity: 1; }
+.hand svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.hand.tap svg { animation: tap 0.5s ease; }
+@keyframes tap { 0% { transform: translateY(0) scale(1); } 40% { transform: translateY(calc(var(--k) * 0.1)) scale(0.94); } 100% { transform: translateY(0) scale(1); } }
+.hand-line { fill: none; stroke: var(--hand-line); stroke-width: 7; stroke-linejoin: round; }
+.hand-fill { fill: var(--hand); }
+
+@media (max-width: 479px) {
+  .top { flex-wrap: nowrap; align-items: flex-start; }
+  #gear { padding: 0; width: 48px; flex: none; }
+  #gear span { display: none; }
+  .coach { min-height: 64px; }
+}
+@media (min-width: 780px) {
+  .stage { grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 36px; justify-items: stretch; }
+  .pad { --k: clamp(64px, calc((100svh - 220px) / 5.9), 118px); }
+}
+
+/* Call screen shown after Call is pressed. */
+.callscreen {
+  position: fixed; inset: 0; z-index: 40; background: var(--bg);
+  display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  overflow: auto;
+}
+.callcard { width: min(460px, 100%); display: grid; gap: 14px; justify-items: center; text-align: center; }
+.call-kicker { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+.call-num { font-size: clamp(44px, 12vw, 72px); font-weight: 700; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.rings { position: relative; width: 120px; height: 120px; display: grid; place-items: center; margin-block: 8px; }
+.rings i { position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--good); opacity: 0; }
+.rings.ringing i { animation: ring 1.6s ease-out infinite; }
+.rings.ringing i:nth-child(2) { animation-delay: 0.5s; }
+.rings.ringing i:nth-child(3) { animation-delay: 1s; }
+@keyframes ring { 0% { transform: scale(0.55); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
+.ringcore { width: 76px; height: 76px; border-radius: 50%; background: var(--good); color: var(--good-ink); display: grid; place-items: center; position: relative; }
+.ringcore svg { width: 38px; height: 38px; }
+.call-status { font-size: 24px; font-weight: 700; }
+.bubble { background: var(--surface); border: 2px solid var(--line); border-radius: 18px; padding: 12px 16px; font-size: 21px; font-weight: 700; }
+.call-tip { font-size: 17px; color: var(--ink-soft); }
+.call-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 6px; }
+.call-actions .pill { min-height: 56px; font-size: 19px; padding: 0 24px; }
+
+/* Settings drawer */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 28; }
+.drawer {
+  position: fixed; top: 0; bottom: 0; right: 0; z-index: 30; width: min(460px, 100%);
+  background: var(--surface); border-left: 2px solid var(--line); box-shadow: var(--shadow);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) 18px;
+  display: grid; gap: 18px; align-content: start;
+}
+.drawer-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.drawer h2 { font-size: 22px; }
+.drawer h3 { font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px; }
+.group { display: grid; gap: 10px; padding-top: 14px; border-top: 2px solid var(--line); }
+.group > h3 { margin: 0; }
+.hint { font-size: 15px; color: var(--ink-soft); }
+.row { display: grid; gap: 4px; }
+.row label, .check { font-weight: 700; font-size: 16px; }
+.check { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+input[type="checkbox"], input[type="radio"] { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+select, input[type="text"], input[type="tel"] {
+  width: 100%; min-height: 46px; padding: 0 12px; font: inherit; font-size: 17px;
+  background: var(--bg); color: var(--ink); border: 2px solid var(--line); border-radius: 12px;
+}
+input[type="range"] { width: 100%; accent-color: var(--accent); min-height: 32px; }
+.opt {
+  display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: start;
+  padding: 10px 12px; border: 2px solid var(--line); border-radius: 14px; cursor: pointer;
+}
+.opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.opt input { grid-row: span 2; margin-top: 2px; }
+.opt b { font-size: 17px; }
+.opt span { font-size: 15px; color: var(--ink-soft); }
+:root[data-contrast="high"] .opt:has(input:checked) { background: #00263a; }
+.opts { display: grid; gap: 8px; }
+.inline { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 420px) { .inline { grid-template-columns: 1fr 1fr; } }
+.numlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.numlist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 16px; }
+.numlist button { min-height: 40px; padding: 0 12px; font-size: 15px; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { color: var(--ink-soft); font-weight: 700; }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 50;
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 700; font-size: 16px;
+  max-width: calc(100% - 32px);
+}
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+/* Standalone page: the Artifact wrapper supplied these, so they live here instead. */
+html { color-scheme: light; padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Dial Practice</h1>
+      <p class="tag">Practice only. This does not call anyone.</p>
+    </div>
+    <button id="gear" class="pill" type="button" aria-label="Settings for grown-ups. Press and hold to open.">
+      <i class="fill"></i>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/></svg>
+      <span>Settings <small>hold</small></span>
+    </button>
+  </header>
+
+  <main class="stage">
+    <section class="left" aria-label="Number and help">
+      <div class="goal">
+        <span class="label" id="goalLabel">Dial</span>
+        <span class="name" id="goalName"></span>
+        <span class="chip" id="levelChip"></span>
+      </div>
+      <div class="readout" id="readout" aria-hidden="true"></div>
+      <div class="coach">
+        <p id="coachText"></p>
+        <button class="say" id="say" type="button" aria-label="Say it out loud">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10v4h4l5 4V6L7 10H3z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M19 5.5a9 9 0 0 1 0 13"/></svg>
+        </button>
+      </div>
+      <div class="tools">
+        <button class="pill" id="watch" type="button">Watch me</button>
+        <button class="pill" id="hint" type="button">Hint</button>
+        <button class="pill" id="reset" type="button">Start over</button>
+      </div>
+    </section>
+
+    <div class="pad" id="pad" role="group" aria-label="Phone keypad"></div>
+  </main>
+</div>
+
+<div class="sr" id="live" aria-live="polite"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<div class="callscreen" id="call" role="dialog" aria-modal="true" aria-labelledby="callNum" hidden>
+  <div class="callcard">
+    <p class="call-kicker" id="callKicker">Practice call</p>
+    <h2 class="call-num" id="callNum"></h2>
+    <div class="rings" id="rings" aria-hidden="true">
+      <i></i><i></i><i></i>
+      <span class="ringcore"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></span>
+    </div>
+    <p class="call-status" id="callStatus">Ringing</p>
+    <p class="bubble" id="bubble" hidden></p>
+    <p class="call-tip" id="callTip" hidden>In a real call, stay on the line and say where you are.</p>
+    <div class="call-actions">
+      <button class="pill danger" id="callEnd" type="button">End call</button>
+      <button class="pill primary" id="callAgain" type="button" hidden>Dial again</button>
+      <button class="pill" id="callWatch" type="button" hidden>Watch me</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle" hidden>
+  <div class="drawer-head">
+    <h2 id="setTitle">Settings for grown-ups</h2>
+    <button class="pill primary" id="setClose" type="button">Done</button>
+  </div>
+  <p class="hint">Practice only. Settings and progress stay in this browser on this device.</p>
+
+  <div class="group">
+    <h3>Number to practice</h3>
+    <div class="row">
+      <label for="numSel">Practice number</label>
+      <select id="numSel"></select>
+    </div>
+    <details>
+      <summary class="check">Add a number</summary>
+      <div class="inline" style="margin-top:8px">
+        <input id="newName" type="text" placeholder="Name, such as Home" maxlength="30" aria-label="Name">
+        <input id="newDigits" type="tel" inputmode="numeric" placeholder="Digits only" maxlength="20" aria-label="Digits">
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
+        <button class="pill" id="addNum" type="button">Add number</button>
+        <span class="hint" id="addMsg"></span>
+      </div>
+    </details>
+    <ul class="numlist" id="numList"></ul>
+  </div>
+
+  <div class="group">
+    <h3>Support level</h3>
+    <div class="opts" id="levels"></div>
+  </div>
+
+  <div class="group">
+    <h3>Sound</h3>
+    <div class="row">
+      <label for="sound">Feedback when a key is pressed</label>
+      <select id="sound">
+        <option value="both">Tone and voice</option>
+        <option value="tones">Tone only</option>
+        <option value="voice">Voice only</option>
+        <option value="off">Silent</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="volume">Volume</label>
+      <input id="volume" type="range" min="0.1" max="1" step="0.05">
+    </div>
+    <label class="check"><input id="prompts" type="checkbox"> Say the next key out loud</label>
+    <div><button class="pill" id="testSound" type="button">Test sound</button></div>
+  </div>
+
+  <div class="group">
+    <h3>How keys respond</h3>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="press" value="touch"><b>On touch</b><span>The key works the moment it is touched.</span></label>
+      <label class="opt"><input type="radio" name="press" value="release"><b>On release</b><span>The key works when the finger lifts off it.</span></label>
+      <label class="opt"><input type="radio" name="press" value="hold"><b>Touch and hold</b><span>The key fills up and works after a short hold.</span></label>
+    </div>
+    <div class="inline">
+      <div class="row"><label for="holdMs">Hold time</label>
+        <select id="holdMs"><option value="300">0.3 seconds</option><option value="500">0.5 seconds</option><option value="800">0.8 seconds</option><option value="1200">1.2 seconds</option></select></div>
+      <div class="row"><label for="guard">Ignore repeat touches</label>
+        <select id="guard"><option value="0">Off</option><option value="300">0.3 seconds</option><option value="600">0.6 seconds</option><option value="1000">1 second</option></select></div>
+    </div>
+  </div>
+
+  <div class="group">
+    <h3>Display</h3>
+    <label class="check"><input id="showNum" type="checkbox"> Show the number to dial</label>
+    <div class="row"><label for="fadeSec">Level 3: show the glow after</label>
+      <select id="fadeSec"><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="8">8 seconds</option><option value="12">12 seconds</option></select></div>
+    <div class="row"><label for="contrast">Colors</label>
+      <select id="contrast"><option value="standard">Standard</option><option value="high">High contrast</option></select></div>
+  </div>
+
+  <div class="group">
+    <h3>Recent practice</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>When</th><th>Number</th><th>Level</th><th>Time</th><th>Misses</th><th>Hints</th></tr></thead>
+      <tbody id="sessions"></tbody>
+    </table></div>
+    <p class="hint" id="noSessions">No practice yet.</p>
+    <div><button class="pill" id="clearSessions" type="button">Clear progress</button></div>
+  </div>
+</aside>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const KEYS = ['1','2','3','4','5','6','7','8','9','*','0','#'];
+const WORDS = { '0':'zero','1':'one','2':'two','3':'three','4':'four','5':'five','6':'six','7':'seven','8':'eight','9':'nine','*':'star','#':'pound' };
+const ROWS = [697, 770, 852, 941], COLS = [1209, 1336, 1477];
+const PRAISE = ['Good!', 'Nice!', 'Yes!', 'Great!'];
+const LEVELS = {
+  1: { name: 'Watch and follow', desc: 'A hand shows the path to each key. Only the next key is bright.' },
+  2: { name: 'Follow the glow', desc: 'The next key glows and a line shows the path. All keys stay active.' },
+  3: { name: 'Fading help', desc: 'No cue at first. The glow appears after a pause or two wrong presses.' },
+  4: { name: 'On my own', desc: 'No cues. The Hint button shows the way when it is pressed.' },
+  free: { name: 'Free dial', desc: 'Type any number. Every key makes its own sound.' }
+};
+const DEFAULTS = {
+  level: 1, numberId: '911',
+  numbers: [
+    { id: '911', name: 'Emergency (US, Canada)', digits: '911', builtin: true },
+    { id: '112', name: 'Emergency (Europe)', digits: '112', builtin: true },
+    { id: '999', name: 'Emergency (UK)', digits: '999', builtin: true }
+  ],
+  sound: 'both', volume: 0.8, prompts: true, press: 'touch', holdMs: 500, guard: 0,
+  showNumber: true, fadeSec: 5, contrast: 'standard'
+};
+const EMERGENCY = ['911', '112', '999'];
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const S = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), store.get('dialpractice.settings') || {});
+if (!Array.isArray(S.numbers) || !S.numbers.length) S.numbers = JSON.parse(JSON.stringify(DEFAULTS.numbers));
+let sessions = store.get('dialpractice.sessions');
+if (!Array.isArray(sessions)) sessions = [];
+const save = () => store.set('dialpractice.settings', S);
+const num = () => S.numbers.find(n => n.id === S.numberId) || S.numbers[0];
+const pretty = d => d.split('').join(' ');
+const targets = () => [...num().digits.split(''), 'call'];
+
+const st = {
+  entered: '', idx: 0, misses: 0, errors: 0, hints: 0, prev: null, startedAt: 0,
+  idleCue: false, hintUntil: 0, done: false, demo: false, note: '', praise: '', fresh: -1, lastAt: 0
+};
+let callTok = 0, demoTok = 0, idleT = null, hintT = null, guideT = null, lastGuideKey = null;
+
+/* ---------- Sound ---------- */
+let ctx = null;
+function audio() {
+  try {
+    if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) ctx = new AC(); }
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  } catch (e) {}
+  return ctx;
+}
+function tone(freqs, dur, vol) {
+  const c = audio(); if (!c || S.sound === 'off') return;
+  const t0 = c.currentTime, g = c.createGain(), peak = vol * S.volume;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(peak, t0 + 0.012);
+  g.gain.setValueAtTime(peak, t0 + Math.max(0.02, dur - 0.05));
+  g.gain.linearRampToValueAtTime(0, t0 + dur);
+  g.connect(c.destination);
+  freqs.forEach(f => { const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.connect(g); o.start(t0); o.stop(t0 + dur + 0.03); });
+}
+function say(text, queue) {
+  if (!('speechSynthesis' in window) || S.sound === 'off') return;
+  try {
+    const ss = window.speechSynthesis;
+    if (!queue) ss.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.85; u.volume = S.volume;
+    ss.speak(u);
+  } catch (e) {}
+}
+function feedback(k) {
+  if (S.sound === 'off') return;
+  if (S.sound === 'tones' || S.sound === 'both') {
+    const i = KEYS.indexOf(k); tone([ROWS[Math.floor(i / 3)], COLS[i % 3]], 0.22, 0.2);
+  }
+  if (S.sound === 'voice' || S.sound === 'both') say(WORDS[k]);
+}
+function chime() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone([f], 0.28, 0.25), i * 130)); }
+const promptFor = t => t === 'call' ? 'Press the green call button' : 'Press ' + WORDS[t];
+function speakPrompt() {
+  const t = curTarget(); if (!t || !S.prompts) return;
+  say(promptFor(t), true);
+}
+const live = msg => { $('#live').textContent = ''; setTimeout(() => { $('#live').textContent = msg; }, 20); };
+
+/* ---------- Build keypad ---------- */
+const pad = $('#pad');
+const keyEl = {};
+pad.insertAdjacentHTML('beforeend',
+  '<div class="overlay" aria-hidden="true">' +
+  '<svg class="trail"><defs><marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto"><path class="arrow" d="M0 0L10 5L0 10z"/></marker></defs>' +
+  '<path id="trailPath" class="trail-path" marker-end="url(#arrow)"/></svg>' +
+  '<div class="hand" id="hand"><svg viewBox="0 0 64 84"><defs>' +
+  '<g id="handShapes"><rect x="23" y="3" width="16" height="50" rx="8"/><rect x="9" y="36" width="46" height="44" rx="20"/><rect x="40" y="33" width="13" height="22" rx="6.5"/></g></defs>' +
+  '<use href="#handShapes" class="hand-line"/><use href="#handShapes" class="hand-fill"/></svg></div></div>');
+KEYS.forEach(k => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'key'; b.dataset.k = k; b.setAttribute('aria-label', WORDS[k]);
+  b.innerHTML = '<span>' + k + '</span><i class="fill"></i>';
+  pad.appendChild(b); keyEl[k] = b;
+});
+const callBtn = document.createElement('button');
+callBtn.type = 'button'; callBtn.className = 'key call'; callBtn.dataset.k = 'call'; callBtn.setAttribute('aria-label', 'Call');
+callBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg><span>Call</span><i class="fill"></i>';
+pad.appendChild(callBtn); keyEl.call = callBtn;
+const handEl = $('#hand'), trailEl = $('#trailPath');
+
+/* ---------- Helpers ---------- */
+function flash(el, cls, ms) {
+  if (!el) return;
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), ms || 400);
+}
+function curTarget() {
+  if (S.level === 'free' || st.done) return null;
+  return targets()[st.idx] || null;
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 1800);
+}
+function sepAfter(digits) {
+  const n = digits.length;
+  if (n === 10) return new Set([2, 5]);
+  if (n === 11 && digits[0] === '1') return new Set([0, 3, 6]);
+  if (n === 7) return new Set([2]);
+  return new Set();
+}
+
+/* ---------- Cues (the scaffold) ---------- */
+function cues() {
+  const L = S.level, hinted = performance.now() < st.hintUntil;
+  if (st.demo) return { glow: true, hand: true, path: true, block: false };
+  if (L === 'free' || st.done) return { glow: false, hand: false, path: false, block: false };
+  if (L === 1) return { glow: true, hand: true, path: true, block: true };
+  if (L === 2) return { glow: true, hand: hinted, path: true, block: false };
+  const esc = (L === 3 && (st.idleCue || st.misses >= 2)) || (L === 4 && st.misses >= 3);
+  return { glow: hinted || esc, hand: hinted, path: hinted, block: false };
+}
+function armIdle() {
+  clearTimeout(idleT);
+  if (S.level === 3 && !st.done && !st.demo) {
+    idleT = setTimeout(() => { st.idleCue = true; render(); speakPrompt(); }, S.fadeSec * 1000);
+  }
+}
+
+/* ---------- Rendering ---------- */
+function coachMsg() {
+  if (st.demo) return 'Watch how it is done.';
+  if (st.done) return '';
+  const L = S.level;
+  if (L === 'free') return st.entered ? 'Press the green Call button when you are ready.' : 'Type any number. Each key has its own sound.';
+  const T = targets(), t = T[st.idx], digits = pretty(num().digits);
+  const lead = st.note ? st.note + ' ' : (st.praise && st.idx > 0 ? st.praise + ' ' : '');
+  if (st.idx === 0 && !st.note) return L <= 2 ? `Let's dial ${digits}. Start with ${t}.` : `Dial ${digits}, then press Call.`;
+  if (t === 'call') return lead + 'Now press the green Call button.';
+  if (L <= 2) return lead + (t === st.prev ? `Press ${t} again.` : `Now press ${t}.`);
+  return lead + 'Keep going.';
+}
+function renderReadout() {
+  const el = $('#readout'); el.textContent = '';
+  const mk = (txt, cls) => { const s = document.createElement('span'); s.className = 'slot ' + cls; s.textContent = txt || ' '; return s; };
+  if (S.level === 'free') {
+    if (!st.entered) { const p = document.createElement('span'); p.className = 'placeholder'; p.textContent = 'Numbers appear here'; el.append(p); }
+    [...st.entered].forEach((d, i) => el.append(mk(d, 'done' + (i === st.fresh ? ' fresh' : ''))));
+  } else {
+    const digits = num().digits, seps = sepAfter(digits);
+    for (let i = 0; i < digits.length; i++) {
+      const done = i < st.entered.length;
+      let cls = done ? 'done' : (S.showNumber ? 'ghost' : 'empty');
+      if (i === st.fresh) cls += ' fresh';
+      if (i === st.entered.length && !st.done) cls += ' now';
+      el.append(mk(done ? st.entered[i] : (S.showNumber ? digits[i] : ''), cls));
+      if (seps.has(i)) { const sp = document.createElement('span'); sp.className = 'sep'; el.append(sp); }
+    }
+  }
+  st.fresh = -1;
+}
+function geom(k) {
+  const p = pad.getBoundingClientRect(), r = keyEl[k].getBoundingClientRect();
+  return { x: r.left - p.left + r.width / 2, y: r.top - p.top + r.height / 2, w: r.width, h: r.height };
+}
+function placeGuide(c, target) {
+  const p = pad.getBoundingClientRect(), hw = handEl.offsetWidth, sc = hw / 64;
+  if (!p.width) return;
+  let tip;
+  if (target) { const g = geom(target); tip = { x: g.x, y: g.y + Math.min(g.h * 0.2, 16) }; }
+  else tip = { x: p.width / 2, y: p.height + hw * 0.9 };
+  handEl.style.transform = `translate(${tip.x - 31 * sc}px, ${tip.y - 3 * sc}px)`;
+  const showHand = !!(c.hand && target);
+  handEl.classList.toggle('on', showHand);
+  if (c.path && target && st.prev && st.prev !== target) {
+    const a = geom(st.prev), b = geom(target);
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+    const r1 = a.h * 0.55, r2 = b.h * 0.55 + 8;
+    if (len > r1 + r2 + 10) {
+      const ux = dx / len, uy = dy / len;
+      trailEl.setAttribute('d', `M ${a.x + ux * r1} ${a.y + uy * r1} L ${b.x - ux * r2} ${b.y - uy * r2}`);
+      trailEl.classList.add('on');
+    } else trailEl.classList.remove('on');
+  } else trailEl.classList.remove('on');
+  // Gentle repeating "tap" from the hand so the student sees the press as well as the place.
+  if (showHand) {
+    if (lastGuideKey !== target + ':' + st.idx) { lastGuideKey = target + ':' + st.idx; setTimeout(tapGuide, 950); }
+    if (!guideT) guideT = setInterval(tapGuide, 2600);
+  } else { lastGuideKey = null; clearInterval(guideT); guideT = null; }
+}
+function tapGuide() {
+  const t = curTarget(); if (!t || !handEl.classList.contains('on')) return;
+  const once = () => { flash(handEl, 'tap', 520); flash(keyEl[t], 'ghost', 420); };
+  once();
+  if (t === st.prev) setTimeout(once, 560);
+}
+function render() {
+  const target = curTarget(), c = cues();
+  $$('.key', pad).forEach(el => {
+    const k = el.dataset.k;
+    el.classList.toggle('is-target', !!(c.glow && target && k === target));
+    el.classList.toggle('is-dim', !!(c.block && target && k !== target));
+  });
+  const L = S.level;
+  $('#goalLabel').textContent = L === 'free' ? 'Free dial' : 'Dial';
+  $('#goalName').textContent = L === 'free' ? '' : `${num().name}${S.showNumber ? '' : ''}`;
+  $('#levelChip').textContent = L === 'free' ? LEVELS.free.name : `Level ${L} · ${LEVELS[L].name}`;
+  renderReadout();
+  $('#coachText').textContent = coachMsg();
+  $('#hint').hidden = (L === 1 || L === 'free' || st.demo);
+  $('#watch').hidden = L === 'free';
+  $('#watch').textContent = st.demo ? 'Stop' : 'Watch me';
+  placeGuide(c, target);
+}
+
+/* ---------- Pressing keys ---------- */
+function handlePress(k, opts) {
+  opts = opts || {};
+  if (st.demo && !opts.demo) return;
+  if (st.done) return;
+  const now = performance.now();
+  if (!opts.demo && S.guard && now - st.lastAt < S.guard) return;
+  st.lastAt = now;
+  if (S.level === 'free') return freePress(k);
+  const t = curTarget();
+  if (k === t) accept(k, !!opts.demo); else miss(k, t);
+}
+function accept(k, demo) {
+  if (!st.startedAt) st.startedAt = Date.now();
+  st.prev = k; st.misses = 0; st.idleCue = false; st.hintUntil = 0; st.note = '';
+  flash(keyEl[k], 'ok', 500);
+  if (k === 'call') { finishCall(demo); return; }
+  feedback(k);
+  st.entered += k; st.fresh = st.entered.length - 1; st.idx++;
+  st.praise = PRAISE[st.idx % PRAISE.length];
+  live(WORDS[k]);
+  armIdle(); render();
+  if (!demo && (S.level === 1 || S.level === 2)) speakPrompt();
+}
+function miss(k, t) {
+  st.misses++; st.errors++; st.praise = ''; st.note = 'Try again.';
+  tone([196], 0.16, 0.12);
+  flash(keyEl[k], 'miss', 380);
+  if (S.level === 1 && t && keyEl[t]) flash(keyEl[t], 'nudge', 380);
+  live('Try again');
+  armIdle(); render();
+  if (st.misses >= 2) speakPrompt();
+}
+function freePress(k) {
+  if (k === 'call') {
+    if (st.entered) finishCall(false); else { flash(keyEl.call, 'miss', 380); toast('Type a number first'); }
+    return;
+  }
+  if (st.entered.length >= 15) return;
+  st.entered += k; st.fresh = st.entered.length - 1;
+  feedback(k); flash(keyEl[k], 'ok', 500); live(WORDS[k]); render();
+}
+
+/* ---------- Call ---------- */
+function finishCall(demo) {
+  st.done = true; clearTimeout(idleT);
+  const digits = S.level === 'free' ? st.entered : num().digits;
+  if (!demo && S.level !== 'free') {
+    sessions.unshift({ ts: Date.now(), n: digits, lv: S.level, ms: Date.now() - (st.startedAt || Date.now()), err: st.errors, hints: st.hints });
+    sessions = sessions.slice(0, 40); store.set('dialpractice.sessions', sessions);
+  }
+  render();
+  runCall(digits, demo);
+}
+async function runCall(digits, demo) {
+  const tok = ++callTok, emerg = EMERGENCY.includes(digits);
+  const $c = $('#call');
+  $c.hidden = false;
+  $('#callKicker').textContent = demo ? 'Watching an example' : 'Practice call';
+  $('#callNum').textContent = pretty(digits);
+  $('#callStatus').textContent = 'Ringing';
+  $('#bubble').hidden = true; $('#callTip').hidden = true;
+  $('#callEnd').hidden = false; $('#callAgain').hidden = true; $('#callWatch').hidden = true;
+  $('#rings').classList.add('ringing');
+  $('#callEnd').focus({ preventScroll: true });
+  const ring = () => tone([440, 480], 1.0, 0.18);
+  ring(); setTimeout(() => { if (tok === callTok) ring(); }, 1500);
+  await sleep(2700); if (tok !== callTok) return;
+  $('#rings').classList.remove('ringing');
+  const line = emerg ? `${pretty(digits)}. What is your emergency?` : 'Hello?';
+  $('#callStatus').textContent = 'Connected';
+  $('#bubble').textContent = line; $('#bubble').hidden = false;
+  say(emerg ? `${digits.split('').map(d => WORDS[d]).join(' ')}. What is your emergency?` : 'Hello?');
+  if (emerg) $('#callTip').hidden = false;
+  await sleep(2200); if (tok !== callTok) return;
+  if (demo) {
+    await sleep(1200); if (tok !== callTok) return;
+    $('#call').hidden = true; st.demo = false; demoTok++;
+    resetAttempt(); say('Now it is your turn.');
+    return;
+  }
+  $('#callStatus').textContent = 'Great dialing!';
+  chime();
+  $('#callEnd').hidden = true; $('#callAgain').hidden = false; $('#callWatch').hidden = S.level === 'free';
+  $('#callAgain').focus({ preventScroll: true });
+}
+
+/* ---------- Reset, hint, demo ---------- */
+function resetAttempt() {
+  callTok++;
+  try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+  Object.assign(st, { entered: '', idx: 0, misses: 0, errors: 0, hints: 0, prev: null, startedAt: 0, idleCue: false, hintUntil: 0, done: false, note: '', praise: '', fresh: -1 });
+  $('#call').hidden = true; $('#rings').classList.remove('ringing');
+  armIdle(); render();
+}
+function showHint() {
+  if (st.demo || st.done || S.level === 'free' || S.level === 1) return;
+  st.hints++; st.hintUntil = performance.now() + 4500;
+  clearTimeout(hintT); hintT = setTimeout(render, 4600);
+  render(); speakPrompt();
+}
+function stopDemo() { demoTok++; st.demo = false; resetAttempt(); }
+async function runDemo() {
+  if (st.demo) { stopDemo(); return; }
+  if (S.level === 'free') return;
+  resetAttempt(); st.demo = true; const tok = ++demoTok; render();
+  const T = targets();
+  await sleep(500);
+  for (let i = 0; i < T.length; i++) {
+    if (tok !== demoTok) return;
+    await sleep(1100); if (tok !== demoTok) return;
+    flash(handEl, 'tap', 520); await sleep(220); if (tok !== demoTok) return;
+    const el = keyEl[T[i]]; el.classList.add('is-pressed'); setTimeout(() => el.classList.remove('is-pressed'), 200);
+    handlePress(T[i], { demo: true });
+  }
+}
+
+/* ---------- Pointer and keyboard input ---------- */
+let down = null;
+pad.addEventListener('pointerdown', e => {
+  const el = e.target.closest('.key'); if (!el) return;
+  audio();
+  if (st.demo || st.done) return;
+  const k = el.dataset.k;
+  el.classList.add('is-pressed'); down = { el, k };
+  if (S.press === 'touch') handlePress(k);
+  else if (S.press === 'hold') {
+    el.style.setProperty('--hold', S.holdMs + 'ms'); el.classList.add('holding');
+    down.timer = setTimeout(() => { el.classList.remove('holding'); handlePress(k); }, S.holdMs);
+  }
+});
+function endDown(e) {
+  if (!down) return;
+  const d = down; down = null; clearTimeout(d.timer);
+  d.el.classList.remove('is-pressed', 'holding');
+  if (S.press === 'release' && e.type === 'pointerup') {
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    if (under && under.closest('.key') === d.el) handlePress(d.k);
+  }
+}
+window.addEventListener('pointerup', endDown);
+window.addEventListener('pointercancel', endDown);
+pad.addEventListener('click', e => {
+  const el = e.target.closest('.key');
+  if (!el || e.detail !== 0) return; // pointer taps are handled above; this is keyboard or switch activation
+  audio(); flash(el, 'ghost', 160); handlePress(el.dataset.k);
+});
+pad.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('keydown', e => {
+  if (!$('#settings').hidden) { if (e.key === 'Escape') closeSettings(); return; }
+  if (!$('#call').hidden) { if (e.key === 'Escape') $('#callEnd').hidden ? $('#callAgain').click() : $('#callEnd').click(); return; }
+  const t = e.target;
+  if (/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (KEYS.includes(e.key)) {
+    e.preventDefault(); if (e.repeat) return;
+    audio(); flash(keyEl[e.key], 'ghost', 160); handlePress(e.key);
+  } else if (e.key === 'Enter' && t.tagName !== 'BUTTON') {
+    handlePress('call');
+  } else if (e.key === 'Backspace' && S.level === 'free') {
+    st.entered = st.entered.slice(0, -1); render();
+  }
+});
+
+$('#watch').addEventListener('click', runDemo);
+$('#hint').addEventListener('click', showHint);
+$('#reset').addEventListener('click', () => { if (st.demo) stopDemo(); else resetAttempt(); });
+$('#say').addEventListener('click', () => {
+  audio();
+  const prev = S.sound; if (prev === 'off') { toast('Sound is off in settings'); return; }
+  say($('#coachText').textContent.replace(/(\d)/g, '$1 ').replace(/\*/g, 'star').replace(/#/g, 'pound'));
+});
+$('#callEnd').addEventListener('click', () => { if (st.demo) stopDemo(); else resetAttempt(); });
+$('#callAgain').addEventListener('click', resetAttempt);
+$('#callWatch').addEventListener('click', () => { resetAttempt(); runDemo(); });
+
+/* ---------- Settings ---------- */
+const drawer = $('#settings'), scrim = $('#scrim'), gear = $('#gear');
+function openSettings() { buildSettings(); drawer.hidden = false; scrim.hidden = false; $('#setClose').focus({ preventScroll: true }); }
+function closeSettings() { drawer.hidden = true; scrim.hidden = true; gear.focus({ preventScroll: true }); }
+let gearTimer = null, justOpened = false;
+gear.addEventListener('pointerdown', () => {
+  gear.style.setProperty('--hold', '900ms'); gear.classList.add('holding');
+  gearTimer = setTimeout(() => { gear.classList.remove('holding'); justOpened = true; setTimeout(() => { justOpened = false; }, 600); openSettings(); }, 900);
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => gear.addEventListener(ev, () => { clearTimeout(gearTimer); gear.classList.remove('holding'); }));
+gear.addEventListener('click', e => {
+  if (justOpened) return;
+  if (e.detail === 0) openSettings(); else toast('Press and hold to open settings');
+});
+gear.addEventListener('contextmenu', e => e.preventDefault());
+$('#setClose').addEventListener('click', closeSettings);
+scrim.addEventListener('click', closeSettings);
+
+const levelsEl = $('#levels');
+Object.keys(LEVELS).forEach(k => {
+  const l = document.createElement('label'); l.className = 'opt';
+  l.innerHTML = `<input type="radio" name="level" value="${k}"><b>${k === 'free' ? '' : 'Level ' + k + ': '}${LEVELS[k].name}</b><span>${LEVELS[k].desc}</span>`;
+  levelsEl.append(l);
+});
+
+function buildSettings() {
+  const sel = $('#numSel'); sel.textContent = '';
+  S.numbers.forEach(n => { const o = document.createElement('option'); o.value = n.id; o.textContent = `${n.name} (${n.digits})`; sel.append(o); });
+  sel.value = num().id;
+  const list = $('#numList'); list.textContent = '';
+  S.numbers.filter(n => !n.builtin).forEach(n => {
+    const li = document.createElement('li'), s = document.createElement('span'), b = document.createElement('button');
+    s.textContent = `${n.name} (${n.digits})`; b.className = 'pill'; b.type = 'button'; b.textContent = 'Remove';
+    b.setAttribute('aria-label', 'Remove ' + n.name);
+    b.addEventListener('click', () => {
+      S.numbers = S.numbers.filter(x => x.id !== n.id);
+      if (S.numberId === n.id) S.numberId = S.numbers[0].id;
+      save(); buildSettings(); resetAttempt();
+    });
+    li.append(s, b); list.append(li);
+  });
+  $$('input[name=level]').forEach(r => { r.checked = r.value === String(S.level); });
+  $('#sound').value = S.sound; $('#volume').value = S.volume; $('#prompts').checked = S.prompts;
+  $$('input[name=press]').forEach(r => { r.checked = r.value === S.press; });
+  $('#holdMs').value = String(S.holdMs); $('#guard').value = String(S.guard);
+  $('#showNum').checked = S.showNumber; $('#fadeSec').value = String(S.fadeSec); $('#contrast').value = S.contrast;
+  const tb = $('#sessions'); tb.textContent = '';
+  sessions.slice(0, 10).forEach(s => {
+    const tr = document.createElement('tr'), d = new Date(s.ts);
+    const cells = [d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+      s.n, s.lv, Math.max(1, Math.round(s.ms / 1000)) + 's', s.err, s.hints];
+    cells.forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.append(td); });
+    tb.append(tr);
+  });
+  $('#noSessions').hidden = sessions.length > 0;
+  $('#clearSessions').hidden = sessions.length === 0;
+  $('#clearSessions').textContent = 'Clear progress';
+}
+function applySettings() {
+  if (S.contrast === 'high') document.documentElement.setAttribute('data-contrast', 'high');
+  else document.documentElement.removeAttribute('data-contrast');
+}
+drawer.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'numSel') { S.numberId = t.value; save(); resetAttempt(); }
+  else if (t.name === 'level') { S.level = t.value === 'free' ? 'free' : Number(t.value); save(); resetAttempt(); }
+  else if (t.id === 'sound') { S.sound = t.value; save(); }
+  else if (t.id === 'volume') { S.volume = Number(t.value); save(); }
+  else if (t.id === 'prompts') { S.prompts = t.checked; save(); }
+  else if (t.name === 'press') { S.press = t.value; save(); }
+  else if (t.id === 'holdMs') { S.holdMs = Number(t.value); save(); }
+  else if (t.id === 'guard') { S.guard = Number(t.value); save(); }
+  else if (t.id === 'showNum') { S.showNumber = t.checked; save(); render(); }
+  else if (t.id === 'fadeSec') { S.fadeSec = Number(t.value); save(); armIdle(); }
+  else if (t.id === 'contrast') { S.contrast = t.value; save(); applySettings(); render(); }
+});
+$('#addNum').addEventListener('click', () => {
+  const digits = $('#newDigits').value.replace(/\D/g, ''), name = $('#newName').value.trim() || digits;
+  if (digits.length < 3 || digits.length > 15) { $('#addMsg').textContent = 'Enter 3 to 15 digits.'; return; }
+  const n = { id: 'c' + Date.now(), name, digits };
+  S.numbers.push(n); S.numberId = n.id; save();
+  $('#newName').value = ''; $('#newDigits').value = ''; $('#addMsg').textContent = 'Added.';
+  buildSettings(); resetAttempt();
+});
+$('#testSound').addEventListener('click', () => { audio(); const f = S.sound === 'voice' ? null : 1; if (f) feedback('5'); else say('five'); if (S.sound === 'off') toast('Sound is set to silent'); });
+let clearArmed = false;
+$('#clearSessions').addEventListener('click', e => {
+  if (!clearArmed) { clearArmed = true; e.target.textContent = 'Tap again to clear'; setTimeout(() => { clearArmed = false; e.target.textContent = 'Clear progress'; }, 3000); return; }
+  clearArmed = false; sessions = []; store.set('dialpractice.sessions', sessions); buildSettings();
+});
+
+/* ---------- Start ---------- */
+applySettings();
+if (!S.numbers.some(n => n.id === S.numberId)) S.numberId = S.numbers[0].id;
+// Park the hand just below the keypad before the first render so it glides up to the first key.
+function parkHand() {
+  handEl.style.transition = 'none';
+  const p = pad.getBoundingClientRect(), sc = handEl.offsetWidth / 64;
+  handEl.style.transform = `translate(${p.width / 2 - 31 * sc}px, ${p.height + handEl.offsetWidth * 0.9}px)`;
+  void handEl.offsetWidth; handEl.style.transition = '';
+}
+render();
+parkHand();
+setTimeout(render, 250);
+new ResizeObserver(() => render()).observe(pad);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+armIdle();
+})();
+</script>
+
+</body>
+</html>
