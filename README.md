@@ -9,11 +9,11 @@ The design borrows the idea behind motor-planning AAC systems such as LAMP: ever
 ## Quick start
 
 1. Open the app in a browser on a tablet, laptop, or phone.
-2. Hand the device to the student. It starts at Level 1 with 9-1-1.
-3. The student follows the hand and the glowing key: **9, 1, 1, then the green Call button**.
+2. Hand the device to the student. It starts in **Free dial**: the student can type any number, and every key makes its own sound.
+3. To practice 9-1-1 with help, hold the **Settings** button for about one second and choose **Level 1**. The student then follows the hand and the glowing key: **9, 1, 1, then the green Call button**.
 4. A practice call rings, a practice operator answers, and the screen says **Great dialing!**
 
-To change the number, level, or sound, hold the **Settings** button for about one second (see below).
+Settings is also where you change the number, level, and sound (see below). The app remembers your choice on that device.
 
 ## What the student sees and hears
 
