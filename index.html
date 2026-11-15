@@ -234,6 +234,7 @@ h1, h2, h3, p { margin: 0; }
 @keyframes tap { 0% { transform: translateY(0) scale(1); } 40% { transform: translateY(calc(var(--k) * 0.1)) scale(0.94); } 100% { transform: translateY(0) scale(1); } }
 .hand-line { fill: none; stroke: var(--hand-line); stroke-width: 7; stroke-linejoin: round; }
 .hand-fill { fill: var(--hand); }
+.hand-crease { fill: none; stroke: var(--hand-line); stroke-width: 2.5; stroke-linecap: round; }
 
 @media (max-width: 479px) {
   .top { flex-wrap: nowrap; align-items: flex-start; }
@@ -584,8 +585,8 @@ pad.insertAdjacentHTML('beforeend',
   '<svg class="trail"><defs><marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto"><path class="arrow" d="M0 0L10 5L0 10z"/></marker></defs>' +
   '<path id="trailPath" class="trail-path" marker-end="url(#arrow)"/></svg>' +
   '<div class="hand" id="hand"><svg viewBox="0 0 64 84"><defs>' +
-  '<g id="handShapes"><rect x="23" y="3" width="16" height="50" rx="8"/><rect x="9" y="36" width="46" height="44" rx="20"/><rect x="40" y="33" width="13" height="22" rx="6.5"/></g></defs>' +
-  '<use href="#handShapes" class="hand-line"/><use href="#handShapes" class="hand-fill"/></svg></div></div>');
+  '<g id="handShapes"><rect x="24" y="3" width="14" height="48" rx="7"/><rect x="12" y="38" width="44" height="42" rx="16"/><rect x="37" y="30" width="11" height="24" rx="5.5"/><rect x="45" y="34" width="11" height="22" rx="5.5"/><rect x="5" y="40" width="14" height="28" rx="7" transform="rotate(-18 12 54)"/></g></defs>' +
+  '<use href="#handShapes" class="hand-line"/><use href="#handShapes" class="hand-fill"/><path class="hand-crease" d="M37.5 40v12M46 43v11"/></svg></div></div>');
 KEYS.forEach(k => {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'key'; b.dataset.k = k; b.setAttribute('aria-label', WORDS[k]);
