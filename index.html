@@ -304,6 +304,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); min-height: 32px
 .opt span { font-size: 15px; color: var(--ink-soft); }
 :root[data-contrast="high"] .opt:has(input:checked) { background: #00263a; }
 .opts { display: grid; gap: 8px; }
+.opt:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 .inline { display: grid; grid-template-columns: 1fr; gap: 8px; }
 @media (min-width: 420px) { .inline { grid-template-columns: 1fr 1fr; } }
 .numlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
@@ -404,7 +405,8 @@ body { margin: 0; }
       <label for="numSel">Practice number</label>
       <select id="numSel"></select>
     </div>
-    <details>
+    <p class="hint" id="noNumbers" hidden>No practice numbers yet. Add one below to use Levels 1 to 4. Free dial works without one.</p>
+    <details id="addDetails">
       <summary class="check">Add a number</summary>
       <div class="inline" style="margin-top:8px">
         <input id="newName" type="text" placeholder="Name, such as Home" maxlength="30" aria-label="Name">
@@ -496,12 +498,8 @@ const LEVELS = {
   free: { name: 'Free dial', desc: 'Type any number. Every key makes its own sound.' }
 };
 const DEFAULTS = {
-  level: 'free', numberId: '911',
-  numbers: [
-    { id: '911', name: 'Emergency (US, Canada)', digits: '911', builtin: true },
-    { id: '112', name: 'Emergency (Europe)', digits: '112', builtin: true },
-    { id: '999', name: 'Emergency (UK)', digits: '999', builtin: true }
-  ],
+  level: 'free', numberId: '',
+  numbers: [],
   sound: 'both', volume: 0.8, prompts: true, press: 'touch', holdMs: 500, guard: 0,
   showNumber: true, fadeSec: 5, contrast: 'standard'
 };
@@ -512,11 +510,19 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
 const S = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), store.get('dialpractice.settings') || {});
-if (!Array.isArray(S.numbers) || !S.numbers.length) S.numbers = JSON.parse(JSON.stringify(DEFAULTS.numbers));
+if (!Array.isArray(S.numbers)) S.numbers = [];
+// Earlier versions shipped built-in emergency numbers. Drop any that were saved.
+S.numbers = S.numbers.filter(n => n && !n.builtin && /^\d{3,15}$/.test(String(n.digits)));
+// Levels 1 to 4 need a practice number. Without one the app stays in Free dial.
+function ensureValid() {
+  if (!S.numbers.some(n => n.id === S.numberId)) S.numberId = S.numbers.length ? S.numbers[0].id : '';
+  if (!S.numbers.length && S.level !== 'free') S.level = 'free';
+}
+ensureValid();
 let sessions = store.get('dialpractice.sessions');
 if (!Array.isArray(sessions)) sessions = [];
 const save = () => store.set('dialpractice.settings', S);
-const num = () => S.numbers.find(n => n.id === S.numberId) || S.numbers[0];
+const num = () => S.numbers.find(n => n.id === S.numberId) || S.numbers[0] || null;
 const pretty = d => d.split('').join(' ');
 const targets = () => [...num().digits.split(''), 'call'];
 
@@ -911,7 +917,7 @@ $('#setClose').addEventListener('click', closeSettings);
 scrim.addEventListener('click', closeSettings);
 
 const levelsEl = $('#levels');
-Object.keys(LEVELS).forEach(k => {
+['free', 1, 2, 3, 4].forEach(k => {
   const l = document.createElement('label'); l.className = 'opt';
   l.innerHTML = `<input type="radio" name="level" value="${k}"><b>${k === 'free' ? '' : 'Level ' + k + ': '}${LEVELS[k].name}</b><span>${LEVELS[k].desc}</span>`;
   levelsEl.append(l);
@@ -920,7 +926,12 @@ Object.keys(LEVELS).forEach(k => {
 function buildSettings() {
   const sel = $('#numSel'); sel.textContent = '';
   S.numbers.forEach(n => { const o = document.createElement('option'); o.value = n.id; o.textContent = `${n.name} (${n.digits})`; sel.append(o); });
-  sel.value = num().id;
+  const has = S.numbers.length > 0;
+  sel.value = has ? num().id : '';
+  sel.closest('.row').hidden = !has;
+  $('#noNumbers').hidden = has;
+  if (!has) $('#addDetails').open = true;
+  $$('input[name=level]').forEach(r => { r.disabled = !has && r.value !== 'free'; });
   const list = $('#numList'); list.textContent = '';
   S.numbers.filter(n => !n.builtin).forEach(n => {
     const li = document.createElement('li'), s = document.createElement('span'), b = document.createElement('button');
@@ -928,7 +939,7 @@ function buildSettings() {
     b.setAttribute('aria-label', 'Remove ' + n.name);
     b.addEventListener('click', () => {
       S.numbers = S.numbers.filter(x => x.id !== n.id);
-      if (S.numberId === n.id) S.numberId = S.numbers[0].id;
+      ensureValid();
       save(); buildSettings(); resetAttempt();
     });
     li.append(s, b); list.append(li);
@@ -973,7 +984,7 @@ $('#addNum').addEventListener('click', () => {
   if (digits.length < 3 || digits.length > 15) { $('#addMsg').textContent = 'Enter 3 to 15 digits.'; return; }
   const n = { id: 'c' + Date.now(), name, digits };
   S.numbers.push(n); S.numberId = n.id; save();
-  $('#newName').value = ''; $('#newDigits').value = ''; $('#addMsg').textContent = 'Added.';
+  $('#newName').value = ''; $('#newDigits').value = ''; $('#addMsg').textContent = 'Added. Choose a level above to practice it.';
   buildSettings(); resetAttempt();
 });
 $('#testSound').addEventListener('click', () => { audio(); const f = S.sound === 'voice' ? null : 1; if (f) feedback('5'); else say('five'); if (S.sound === 'off') toast('Sound is set to silent'); });
@@ -985,7 +996,7 @@ $('#clearSessions').addEventListener('click', e => {
 
 /* ---------- Start ---------- */
 applySettings();
-if (!S.numbers.some(n => n.id === S.numberId)) S.numberId = S.numbers[0].id;
+ensureValid();
 // Park the hand just below the keypad before the first render so it glides up to the first key.
 function parkHand() {
   handEl.style.transition = 'none';

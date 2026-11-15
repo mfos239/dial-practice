@@ -10,8 +10,8 @@ The design borrows the idea behind motor-planning AAC systems such as LAMP: ever
 
 1. Open the app in a browser on a tablet, laptop, or phone.
 2. Hand the device to the student. It starts in **Free dial**: the student can type any number, and every key makes its own sound.
-3. To practice 9-1-1 with help, hold the **Settings** button for about one second and choose **Level 1**. The student then follows the hand and the glowing key: **9, 1, 1, then the green Call button**.
-4. A practice call rings, a practice operator answers, and the screen says **Great dialing!**
+3. To practice a specific number with help, hold the **Settings** button for about one second and add the number you want, such as a family number or your local emergency number. Then choose **Level 1**. The student follows the hand and the glowing key to each digit, then the green Call button.
+4. A practice call rings, and the screen says **Great dialing!**
 
 Settings is also where you change the number, level, and sound (see below). The app remembers your choice on that device.
 
@@ -22,19 +22,19 @@ Settings is also where you change the number, level, and sound (see below). The 
 - **Spoken digits.** The app says each digit as it is pressed, such as "nine".
 - **Coach box.** A short line tells the student what to do next. The speaker button reads it aloud.
 - **Wrong key.** A soft low blip plays and the key wobbles. The wrong digit is never typed, and the pleasant key tone is not played, so the student does not practice the wrong movement. The coach says "Try again."
-- **Call button.** Pressing Call is the last step, so the whole sequence is practiced. The practice call rings. For 911, 112, and 999 a practice operator says "What is your emergency?" and a short reminder says to stay on the line and say where you are.
+- **Call button.** Pressing Call is the last step, so the whole sequence is practiced. The practice call rings. If the number is 911, 112, or 999, a practice operator says "What is your emergency?" and a short reminder says to stay on the line and say where you are.
 
 ## Support levels
 
-Start where the student can succeed, then give less help over time.
+Start where the student can succeed, then give less help over time. Levels 1 to 4 need a practice number, so add one in Settings first. Free dial works without one.
 
 | Level | Name | What the student gets |
 |---|---|---|
+| Free dial | Free dial | Type any number and press Call. Every key still makes its own sound. |
 | 1 | Watch and follow | A hand glides to each key and taps it. A dotted arrow shows the path from the last key. Only the next key is bright. The other keys fade back. |
 | 2 | Follow the glow | The next key glows and the arrow stays. No hand unless the student presses Hint. All keys work. |
 | 3 | Fading help | No cue at first. The glow appears after a pause (3, 5, 8, or 12 seconds, your choice) or after two wrong presses. |
 | 4 | On my own | No cues. The glow appears after three wrong presses, or when the student presses **Hint**. |
-| Free dial | Free dial | Type any number and press Call. Every key still makes its own sound. |
 
 Buttons under the coach box:
 
@@ -46,8 +46,8 @@ Buttons under the coach box:
 
 Press and hold the **Settings** button for about one second. The hold keeps students from opening it by accident. If you use a keyboard, tab to it and press Enter.
 
-- **Practice number.** Choose 911, 112 (Europe), or 999 (UK), or add your own, such as a family number. Use 3 to 15 digits. Check that the emergency number matches where your students live.
-- **Support level.** Pick Level 1 to 4 or Free dial.
+- **Practice number.** The app comes with no practice numbers. Add your own under **Add a number**, with a name and 3 to 15 digits, and choose which one to practice. If you use an emergency number, check that it matches where your students live. You can remove a number at any time. If you remove the last one, the app goes back to Free dial.
+- **Support level.** Pick Free dial or Level 1 to 4. Levels 1 to 4 stay unavailable until you add a practice number.
 - **Sound.** Tone and voice, tone only, voice only, or silent. Set the volume, and choose whether the app says the next key out loud. The Test sound button plays a sample.
 - **How keys respond.**
   - *On touch:* the key works as soon as it is touched.
